@@ -1,6 +1,6 @@
 # Mini RAG 🚀
 
-A lightweight, modular, and production-ready Retrieval-Augmented Generation (RAG) library built with Python. Install with `pip install mini-rag` and start building intelligent document search and question-answering systems in minutes. Mini RAG provides advanced features like query rewriting, re-ranking, and agentic decision-making—all with a simple, pythonic API.
+A lightweight, modular, and production-ready Retrieval-Augmented Generation (RAG) library built with Python. Install with `uv add mini-rag` and start building intelligent document search and question-answering systems in minutes. Mini RAG provides advanced features like query rewriting, re-ranking, and agentic decision-making—all with a simple, pythonic API.
 
 ## ✨ Features
 
