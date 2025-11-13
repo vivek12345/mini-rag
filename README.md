@@ -1,5 +1,9 @@
 # Mini RAG 🚀
 
+[![PyPI version](https://badge.fury.io/py/mini-rag.svg)](https://badge.fury.io/py/mini-rag)
+[![Python Version](https://img.shields.io/pypi/pyversions/mini-rag.svg)](https://pypi.org/project/mini-rag/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A lightweight, modular, and production-ready Retrieval-Augmented Generation (RAG) library built with Python. Install with `uv add mini-rag` and start building intelligent document search and question-answering systems in minutes. Mini RAG provides advanced features like query rewriting, re-ranking, and agentic decision-making—all with a simple, pythonic API.
 
 ## ✨ Features
