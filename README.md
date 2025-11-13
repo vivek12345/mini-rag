@@ -26,9 +26,11 @@ uv add mini-rag
 ```python
 # Create your RAG application
 import os
-from mini.rag import AgenticRAG
-from mini.embedding import EmbeddingModel
-from mini.store import VectorStore
+from mini import (
+    AgenticRAG,
+    EmbeddingModel,
+    VectorStore
+)
 
 # Setup (one time)
 embedding_model = EmbeddingModel()
@@ -181,9 +183,13 @@ LANGFUSE_HOST=https://cloud.langfuse.com  # Optional, defaults to cloud
 
 ```python
 import os
-from mini.rag import AgenticRAG, LLMConfig, RetrievalConfig
-from mini.embedding import EmbeddingModel
-from mini.store import VectorStore
+from mini import (
+    AgenticRAG, 
+    LLMConfig, 
+    RetrievalConfig,
+    EmbeddingModel,
+    VectorStore
+)
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -229,9 +235,11 @@ Once you have your environment set up, using Mini RAG is incredibly simple:
 
 ```python
 import os
-from mini.rag import AgenticRAG
-from mini.embedding import EmbeddingModel
-from mini.store import VectorStore
+from mini import (
+    AgenticRAG,
+    EmbeddingModel,
+    VectorStore
+)
 
 # Initialize (using environment variables from .env)
 embedding_model = EmbeddingModel()
@@ -258,7 +266,7 @@ That's it! Mini RAG handles query rewriting, retrieval, re-ranking, and answer g
 Mini RAG includes built-in support for Langfuse observability, allowing you to track and analyze your RAG pipeline's performance:
 
 ```python
-from mini.rag import AgenticRAG, LLMConfig, RetrievalConfig, ObservabilityConfig
+from mini import AgenticRAG, LLMConfig, RetrievalConfig, ObservabilityConfig
 
 # Enable observability when initializing RAG
 rag = AgenticRAG(
