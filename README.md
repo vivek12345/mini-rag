@@ -1,6 +1,6 @@
 # Mini RAG 🚀
 
-A lightweight, modular, and production-ready Retrieval-Augmented Generation (RAG) library built with Python. Mini RAG provides an intelligent document search and question-answering system with advanced features like query rewriting, re-ranking, and agentic decision-making.
+A lightweight, modular, and production-ready Retrieval-Augmented Generation (RAG) library built with Python. Install with `pip install mini-rag` and start building intelligent document search and question-answering systems in minutes. Mini RAG provides advanced features like query rewriting, re-ranking, and agentic decision-making—all with a simple, pythonic API.
 
 ## ✨ Features
 
@@ -13,6 +13,40 @@ A lightweight, modular, and production-ready Retrieval-Augmented Generation (RAG
 - **📊 Multiple Re-ranking Options**: Choose from Cohere API, local cross-encoders, or LLM-based re-ranking
 - **📈 Observability**: Built-in Langfuse integration for tracing and monitoring
 - **🔧 Modular Design**: Use individual components or the complete RAG pipeline
+
+## 💡 Library Usage at a Glance
+
+Install Mini RAG and get started in seconds:
+
+```bash
+# Install the library
+uv add mini-rag
+```
+
+```python
+# Create your RAG application
+import os
+from mini.rag import AgenticRAG
+from mini.embedding import EmbeddingModel
+from mini.store import VectorStore
+
+# Setup (one time)
+embedding_model = EmbeddingModel()
+vector_store = VectorStore(
+    uri=os.getenv("MILVUS_URI"),
+    token=os.getenv("MILVUS_TOKEN"),
+    collection_name="my_knowledge_base",
+    dimension=1536
+)
+rag = AgenticRAG(vector_store=vector_store, embedding_model=embedding_model)
+
+# Use it
+rag.index_document("my_document.pdf")  # Add documents
+response = rag.query("What is the budget?")  # Ask questions
+print(response.answer)
+```
+
+Mini RAG handles all the complexity: document loading, chunking, embedding, vector storage, query rewriting, retrieval, re-ranking, and answer generation—all with just a few lines of code.
 
 ## 🏗️ Architecture
 
@@ -44,26 +78,52 @@ A lightweight, modular, and production-ready Retrieval-Augmented Generation (RAG
 - OpenAI API key (or compatible API)
 - Milvus instance (local or cloud)
 
-### Install with UV (Recommended)
+### Install as a Library (Recommended)
+
+The easiest way to use Mini RAG is to install it as a library:
+
+```bash
+# Install from PyPI
+uv add mini-rag
+```
+
+That's it! You can now import and use Mini RAG in your projects:
+
+```python
+from mini.rag import AgenticRAG, LLMConfig, RetrievalConfig
+from mini.embedding import EmbeddingModel
+from mini.store import VectorStore
+```
+
+### Install from Source (For Development)
+
+If you want to contribute or modify the library:
+
+#### Using UV (Recommended for Development)
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/mini-rag.git
-cd mini
+git clone https://github.com/vivek12345/mini-rag.git
+cd mini-rag
 
 # Install dependencies using uv
 uv sync
 ```
 
-### Install with pip
+#### Using pip
 
 ```bash
-pip install -r requirements.txt
+# Clone the repository
+git clone https://github.com/vivek12345/mini-rag.git
+cd mini-rag
+
+# Install in editable mode
+pip install -e .
 ```
 
 ### Dependencies
 
-The library uses the following key dependencies:
+The library automatically installs the following dependencies:
 
 - `chonkie[hub,openai,viz]>=1.4.1` - Smart text chunking
 - `cohere>=5.0.0` - Cohere API for re-ranking
@@ -73,9 +133,11 @@ The library uses the following key dependencies:
 - `python-dotenv>=1.2.1` - Environment variable management
 - `sentence-transformers>=2.2.0` - Local cross-encoder models for re-ranking
 - `langfuse>=2.0.0` - Observability and tracing
-- `openai` - OpenAI API client
+- `openai>=1.0.0` - OpenAI API client
 
 ## 🚀 Quick Start
+
+This guide shows you how to use Mini RAG as a library in your own projects. After installing with `pip install mini-rag`, follow these steps:
 
 ### Configuration-Based API
 
@@ -94,7 +156,7 @@ This approach provides:
 
 ### 1. Set up environment variables
 
-Create a `.env` file in the project root:
+Create a `.env` file in your project directory:
 
 ```bash
 # OpenAI Configuration
@@ -161,7 +223,37 @@ print(f"\nSources used: {len(response.retrieved_chunks)}")
 print(f"Query variations: {response.rewritten_queries}")
 ```
 
-### 3. Enabling Observability with Langfuse
+### 3. Minimal Example (5 Lines!)
+
+Once you have your environment set up, using Mini RAG is incredibly simple:
+
+```python
+import os
+from mini.rag import AgenticRAG
+from mini.embedding import EmbeddingModel
+from mini.store import VectorStore
+
+# Initialize (using environment variables from .env)
+embedding_model = EmbeddingModel()
+vector_store = VectorStore(
+    uri=os.getenv("MILVUS_URI"),
+    token=os.getenv("MILVUS_TOKEN"),
+    collection_name="my_docs",
+    dimension=1536
+)
+rag = AgenticRAG(vector_store=vector_store, embedding_model=embedding_model)
+
+# Index a document
+rag.index_document("path/to/document.pdf")
+
+# Ask a question
+response = rag.query("What is this document about?")
+print(response.answer)
+```
+
+That's it! Mini RAG handles query rewriting, retrieval, re-ranking, and answer generation automatically.
+
+### 4. Enabling Observability with Langfuse
 
 Mini RAG includes built-in support for Langfuse observability, allowing you to track and analyze your RAG pipeline's performance:
 
@@ -213,6 +305,32 @@ rag.index_document("path/to/document.pdf")
 - Export data for custom analytics
 
 ## 📚 Detailed Usage
+
+Mini RAG is designed to be used as a library in your Python projects. You can use the complete RAG pipeline or individual components based on your needs.
+
+### Using Individual Components
+
+One of Mini RAG's strengths is its modularity. You can import and use individual components in your own projects:
+
+```python
+# Import only what you need
+from mini.loader import DocumentLoader
+from mini.chunker import Chunker
+from mini.embedding import EmbeddingModel
+from mini.store import VectorStore
+from mini.reranker import CohereReranker, SentenceTransformerReranker
+from mini.rag import AgenticRAG, LLMConfig, RetrievalConfig
+
+# Mix and match components as needed
+loader = DocumentLoader()
+chunker = Chunker()
+embedding_model = EmbeddingModel()
+
+# Build your own pipeline
+text = loader.load("document.pdf")
+chunks = chunker.chunk(text)
+embeddings = embedding_model.embed_chunks(chunks)
+```
 
 ### Document Loading
 
@@ -633,6 +751,134 @@ results = store.search(
     top_k=5,
     filter_expr='metadata["year"] == 2024 and metadata["category"] == "research"'
 )
+```
+
+## 🔌 Integrating into Your Application
+
+Mini RAG is designed to be easily integrated into existing Python applications:
+
+### As a FastAPI/Flask Backend
+
+```python
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from mini.rag import AgenticRAG
+from mini.embedding import EmbeddingModel
+from mini.store import VectorStore
+import os
+
+app = FastAPI()
+
+# Initialize once at startup
+@app.on_event("startup")
+async def startup_event():
+    global rag
+    embedding_model = EmbeddingModel()
+    vector_store = VectorStore(
+        uri=os.getenv("MILVUS_URI"),
+        token=os.getenv("MILVUS_TOKEN"),
+        collection_name="knowledge_base",
+        dimension=1536
+    )
+    rag = AgenticRAG(vector_store=vector_store, embedding_model=embedding_model)
+
+class Query(BaseModel):
+    question: str
+
+@app.post("/ask")
+async def ask_question(query: Query):
+    try:
+        response = rag.query(query.question)
+        return {
+            "answer": response.answer,
+            "sources": len(response.retrieved_chunks),
+            "metadata": response.metadata
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+```
+
+### As a Chatbot Component
+
+```python
+from mini.rag import AgenticRAG
+from mini.embedding import EmbeddingModel
+from mini.store import VectorStore
+
+class DocumentChatbot:
+    def __init__(self, milvus_uri: str, milvus_token: str):
+        embedding_model = EmbeddingModel()
+        vector_store = VectorStore(
+            uri=milvus_uri,
+            token=milvus_token,
+            collection_name="chatbot_kb",
+            dimension=1536
+        )
+        self.rag = AgenticRAG(
+            vector_store=vector_store,
+            embedding_model=embedding_model
+        )
+        self.conversation_history = []
+    
+    def add_documents(self, document_paths: list):
+        """Add documents to the knowledge base."""
+        return self.rag.index_documents(document_paths)
+    
+    def chat(self, user_message: str) -> str:
+        """Chat with context from indexed documents."""
+        self.conversation_history.append({"role": "user", "content": user_message})
+        response = self.rag.query(user_message)
+        self.conversation_history.append({"role": "assistant", "content": response.answer})
+        return response.answer
+    
+    def get_history(self):
+        """Get conversation history."""
+        return self.conversation_history
+
+# Usage
+chatbot = DocumentChatbot(os.getenv("MILVUS_URI"), os.getenv("MILVUS_TOKEN"))
+chatbot.add_documents(["faq.pdf", "manual.pdf"])
+answer = chatbot.chat("How do I reset my password?")
+```
+
+### In a Data Processing Pipeline
+
+```python
+from mini.loader import DocumentLoader
+from mini.chunker import Chunker
+from mini.embedding import EmbeddingModel
+import pandas as pd
+
+class DocumentProcessor:
+    def __init__(self):
+        self.loader = DocumentLoader()
+        self.chunker = Chunker()
+        self.embedding_model = EmbeddingModel()
+    
+    def process_documents(self, file_paths: list) -> pd.DataFrame:
+        """Process multiple documents and return a DataFrame."""
+        results = []
+        
+        for path in file_paths:
+            text = self.loader.load(path)
+            chunks = self.chunker.chunk(text)
+            embeddings = self.embedding_model.embed_chunks(chunks)
+            
+            for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
+                results.append({
+                    'source': path,
+                    'chunk_id': i,
+                    'text': chunk.text,
+                    'embedding': embedding,
+                    'token_count': chunk.token_count
+                })
+        
+        return pd.DataFrame(results)
+
+# Usage
+processor = DocumentProcessor()
+df = processor.process_documents(["doc1.pdf", "doc2.pdf"])
+print(f"Processed {len(df)} chunks")
 ```
 
 ## 🔍 Examples
