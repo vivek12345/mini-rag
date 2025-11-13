@@ -1,9 +1,40 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "mini-rag"
 version = "0.1.0"
-description = "Add your description here"
+description = "A lightweight RAG (Retrieval-Augmented Generation) library with document loading, chunking, embedding, vector storage, and re-ranking"
 readme = "README.md"
 requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Vivek N", email = "vivek.of.nayyar@gmail.com"}
+]
+maintainers = [
+    {name = "Vivek N", email = "vivek.of.nayyar@gmail.com"}
+]
+keywords = [
+    "rag",
+    "retrieval",
+    "embeddings",
+    "vector-search",
+    "llm",
+    "ai",
+    "nlp",
+    "semantic-search",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
 dependencies = [
     "chonkie[hub,openai,viz]>=1.4.1",
     "cohere>=5.0.0",
@@ -13,4 +44,14 @@ dependencies = [
     "pymilvus>=2.5.0",
     "python-dotenv>=1.2.1",
     "sentence-transformers>=2.2.0",
+    "openai>=1.0.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/vivek12345/mini-rag"
+Documentation = "https://github.com/vivek12345/mini-rag#readme"
+Repository = "https://github.com/vivek12345/mini-rag"
+Issues = "https://github.com/vivek12345/mini-rag/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["mini"]

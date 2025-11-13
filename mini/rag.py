@@ -9,12 +9,12 @@ from dataclasses import dataclass, field
 from openai import OpenAI
 from dotenv import load_dotenv
 
-from loader import DocumentLoader
-from chunker import Chunker
-from embedding import EmbeddingModel, EmbeddingConfig
-from store import VectorStore
-from reranker import BaseReranker, create_reranker, LLMReranker
-from observability import LangfuseConfig
+from mini.loader import DocumentLoader
+from mini.chunker import Chunker
+from mini.embedding import EmbeddingModel, EmbeddingConfig
+from mini.store import VectorStore
+from mini.reranker import BaseReranker, create_reranker, LLMReranker
+from mini.observability import LangfuseConfig
 from langfuse import observe
 
 # Load environment variables

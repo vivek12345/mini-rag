@@ -8,7 +8,7 @@ class Chunker:
         return self.chunker.chunk(text)
 
 if __name__ == "__main__":
-    from loader import DocumentLoader
+    from mini.loader import DocumentLoader
     loader = DocumentLoader()
     document = loader.load("./mini/documents/eb_test.pdf")
     chunker = Chunker()

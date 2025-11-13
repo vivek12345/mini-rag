@@ -9,5 +9,8 @@ wheels/
 *.egg-info
 .env
 
+# PyPI credentials
+.pypirc
+
 # Virtual environments
 .venv

@@ -15,7 +15,7 @@ from pymilvus import (
 )
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
-from embedding import EmbeddingConfig
+from mini.embedding import EmbeddingConfig
 
 # Load environment variables
 load_dotenv()
