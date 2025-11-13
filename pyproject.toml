@@ -1,0 +1,16 @@
+[project]
+name = "mini-rag"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "chonkie[hub,openai,viz]>=1.4.1",
+    "cohere>=5.0.0",
+    "langfuse>=2.0.0",
+    "markitdown[all]>=0.1.3",
+    "pydantic>=2.12.4",
+    "pymilvus>=2.5.0",
+    "python-dotenv>=1.2.1",
+    "sentence-transformers>=2.2.0",
+]
