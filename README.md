@@ -49,7 +49,7 @@ A lightweight, modular, and production-ready Retrieval-Augmented Generation (RAG
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/mini-rag.git
-cd mini-rag
+cd mini
 
 # Install dependencies using uv
 uv sync
@@ -1015,7 +1015,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🙏 Acknowledgments
 
-- [Chonkie](https://github.com/chonkie-ai/chonkie) - For smart text chunking
+- [Chonkie](https://github.com/chonkie-inc/chonkie) - For smart text chunking
 - [MarkItDown](https://github.com/microsoft/markitdown) - For multi-format document loading
 - [Milvus](https://milvus.io/) - For vector database capabilities
 - [OpenAI](https://openai.com/) - For embeddings and LLM APIs
