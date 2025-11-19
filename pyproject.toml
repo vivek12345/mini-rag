@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mini-rag"
-version = "0.1.2"
+version = "0.1.3"
 description = "A lightweight RAG (Retrieval-Augmented Generation) library with document loading, chunking, embedding, vector storage, and re-ranking"
 readme = "README.md"
 requires-python = ">=3.11"
