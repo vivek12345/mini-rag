@@ -8,6 +8,7 @@ from typing import Optional, Any, Dict, Callable
 from functools import wraps
 from contextlib import contextmanager
 from dotenv import load_dotenv
+from mini.logger import logger
 
 # Load environment variables
 load_dotenv()
@@ -45,8 +46,8 @@ class LangfuseConfig:
     def _initialize(self):
         """Initialize Langfuse client."""
         if not self.public_key or not self.secret_key:
-            print("⚠️  Langfuse credentials not found. Disabling observability.")
-            print("   Set LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY environment variables.")
+            logger.debug("⚠️  Langfuse credentials not found. Disabling observability.")
+            logger.debug("   Set LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY environment variables.")
             self.enabled = False
             return
         
@@ -60,14 +61,14 @@ class LangfuseConfig:
                 host=self.host,
             )
             
-            print(f"✅ Langfuse observability enabled (host: {self.host})")
+            logger.debug(f"✅ Langfuse observability enabled (host: {self.host})")
             
         except ImportError:
-            print("⚠️  Langfuse package not installed. Disabling observability.")
-            print("   Install it with: pip install langfuse")
+            logger.debug("⚠️  Langfuse package not installed. Disabling observability.")
+            logger.debug("   Install it with: pip install langfuse")
             self.enabled = False
         except Exception as e:
-            print(f"⚠️  Failed to initialize Langfuse: {e}")
+            logger.debug(f"⚠️  Failed to initialize Langfuse: {e}")
             self.enabled = False
     
     @property
@@ -85,7 +86,7 @@ class LangfuseConfig:
             try:
                 self._client.flush()
             except Exception as e:
-                print(f"⚠️  Failed to flush Langfuse traces: {e}")
+                logger.debug(f"⚠️  Failed to flush Langfuse traces: {e}")
     
     def shutdown(self):
         """Shutdown Langfuse client and flush traces."""
@@ -93,4 +94,4 @@ class LangfuseConfig:
             try:
                 self._client.shutdown()
             except Exception as e:
-                print(f"⚠️  Failed to shutdown Langfuse: {e}")
+                logger.debug(f"⚠️  Failed to shutdown Langfuse: {e}")

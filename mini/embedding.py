@@ -9,6 +9,7 @@ from typing import List, Optional, Union
 from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel, ConfigDict, Field
 from dotenv import load_dotenv
+from mini.logger import logger
 
 # Load environment variables
 load_dotenv()
@@ -221,7 +222,7 @@ class EmbeddingModel:
 
 if __name__ == "__main__":
     def sync_example():
-        print("Sync example")
+        logger.debug("Sync example")
         from loader import DocumentLoader
         from chunker import Chunker
         loader = DocumentLoader()
@@ -230,10 +231,10 @@ if __name__ == "__main__":
         chunks = chunker.chunk(document)
         embedding_model = EmbeddingModel()
         embeddings = embedding_model.embed_chunks(chunks)
-        print(len(embeddings))
+        logger.debug(len(embeddings))
 
     async def async_example():
-        print("Async example")
+        logger.debug("Async example")
         from loader import DocumentLoader
         from chunker import Chunker
         loader = DocumentLoader()
@@ -242,7 +243,7 @@ if __name__ == "__main__":
         chunks = chunker.chunk(document)
         embedding_model = EmbeddingModel()
         embeddings = await embedding_model.aembed_chunks(chunks)
-        print(len(embeddings))
+        logger.debug(len(embeddings))
 
     import asyncio
     asyncio.run(async_example())

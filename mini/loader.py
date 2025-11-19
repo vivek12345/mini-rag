@@ -1,6 +1,7 @@
 from markitdown import MarkItDown
 import os
 from typing import List
+from mini.logger import logger
 
 
 class DocumentLoader:
@@ -27,4 +28,4 @@ if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
     documents_dir = os.path.join(script_dir, "documents")
     documents = loader.load_documents_from_directory(documents_dir)
-    print(documents)
+    logger.debug(documents)

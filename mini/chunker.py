@@ -1,4 +1,5 @@
 from chonkie import RecursiveChunker
+from mini.logger import logger
 
 class Chunker:
     def __init__(self, lang: str = "en"):
@@ -14,4 +15,4 @@ if __name__ == "__main__":
     chunker = Chunker()
     chunks = chunker.chunk(document)
     for chunk in chunks:
-        print(chunk)
+        logger.debug(chunk)

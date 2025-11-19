@@ -21,6 +21,7 @@ from pymilvus import (
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from mini.embedding import EmbeddingConfig
+from mini.logger import logger
 
 # Load environment variables
 load_dotenv()
@@ -130,7 +131,7 @@ class VectorStore:
     def __connect(self):
         """Connect to Milvus."""
         connections.connect(uri=self.config.uri, token=self.config.token)
-        print(f"✅ Connected to Milvus at {self.config.uri}")
+        logger.info(f"✅ Connected to Milvus at {self.config.uri}")
 
     def _create_or_load_collection(self):
         """Create a new collection or load an existing one."""
@@ -138,11 +139,11 @@ class VectorStore:
             # Load existing collection
             self.collection = Collection(self.config.collection_name)
             self.collection.load()
-            print(f"✅ Loaded existing collection: {self.config.collection_name}")
+            logger.info(f"✅ Loaded existing collection: {self.config.collection_name}")
         else:
             # Create new collection
             self._create_collection()
-            print(f"✅ Created new collection: {self.config.collection_name}")
+            logger.info(f"✅ Created new collection: {self.config.collection_name}")
     
     def _create_collection(self):
         """Create a new collection with the specified schema."""
@@ -267,7 +268,7 @@ class VectorStore:
         result = self.collection.insert(entities)
         self.collection.flush()
         
-        print(f"✅ Inserted {len(embeddings)} vectors into {self.config.collection_name}")
+        logger.info(f"✅ Inserted {len(embeddings)} vectors into {self.config.collection_name}")
         return result.primary_keys
     
     def search(
@@ -399,7 +400,7 @@ class VectorStore:
         """
         self.collection.delete(expr)
         self.collection.flush()
-        print(f"✅ Deleted entities matching: {expr}")
+        logger.info(f"✅ Deleted entities matching: {expr}")
         return 0  # Milvus doesn't return count directly
     
     def count(self) -> int:
@@ -410,13 +411,13 @@ class VectorStore:
         """Drop the entire collection. Use with caution!"""
         collection_name = self.config.collection_name
         self.collection.drop()
-        print(f"⚠️  Dropped collection: {collection_name}")
+        logger.info(f"⚠️  Dropped collection: {collection_name}")
         self.collection = None
     
     def disconnect(self):
         """Disconnect from Milvus."""
         connections.disconnect(self.config.uri)
-        print(f"✅ Disconnected from Milvus")
+        logger.info(f"✅ Disconnected from Milvus")
     
     def __repr__(self) -> str:
         """String representation of the vector store."""
@@ -468,7 +469,7 @@ if __name__ == "__main__":
         metadata=metadata
     )
     
-    print(f"\nTotal entities in collection: {store.count()}")
+    logger.debug(f"\nTotal entities in collection: {store.count()}")
     
     # Search for similar vectors
     query_embedding = embeddings[0]  # Use first embedding as query
@@ -477,22 +478,22 @@ if __name__ == "__main__":
         top_k=3
     )
     
-    print("\nSearch results normal search:")
+    logger.debug("\nSearch results normal search:")
     for i, result in enumerate(results, 1):
-        print(f"\n{i}. Score: {result['score']:.4f}")
-        print(f"   Text: {result['text'][:100]}...")
-        print(f"   Metadata: {result['metadata']}")
+        logger.debug(f"\n{i}. Score: {result['score']:.4f}")
+        logger.debug(f"   Text: {result['text'][:100]}...")
+        logger.debug(f"   Metadata: {result['metadata']}")
     
     results = store.hybrid_search(
         query="tell me about package 1",
         query_embedding=embedding_model.embed_query("tell me about package 1"),
         top_k=3
     )
-    print("\nSearch results hybrid search:")
+    logger.debug("\nSearch results hybrid search:")
     for i, result in enumerate(results, 1):
-        print(f"\n{i}. Score: {result['score']:.4f}")
-        print(f"   Text: {result['text'][:100]}...")
-        print(f"   Metadata: {result['metadata']}")
+        logger.debug(f"\n{i}. Score: {result['score']:.4f}")
+        logger.debug(f"   Text: {result['text'][:100]}...")
+        logger.debug(f"   Metadata: {result['metadata']}")
     # Clean up
     # store.drop_collection()  # Uncomment to drop collection
     store.disconnect()

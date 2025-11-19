@@ -15,6 +15,7 @@ from mini.embedding import EmbeddingModel, EmbeddingConfig
 from mini.store import VectorStore
 from mini.reranker import BaseReranker, create_reranker, LLMReranker
 from mini.observability import LangfuseConfig
+from mini.logger import logger
 from langfuse import observe
 
 # Load environment variables
@@ -134,8 +135,8 @@ class AgenticRAG:
         
         # Query the system
         response = rag.query("What is the budget allocation for education?")
-        print(response.answer)
-        print(f"Used {len(response.retrieved_chunks)} chunks")
+        logger.debug(response.answer)
+        logger.debug(f"Used {len(response.retrieved_chunks)} chunks")
         
         # Index new documents
         rag.index_document("path/to/document.pdf")
@@ -225,15 +226,18 @@ class AgenticRAG:
         self.loader = DocumentLoader()
         self.chunker = Chunker()
         
-        print(f"✅ Initialized AgenticRAG with:")
-        print(f"   - LLM Model: {self.llm_model}")
-        print(f"   - Query Rewriting: {self.use_query_rewriting}")
-        print(f"   - Re-ranking: {self.use_reranking}")
-        if self.use_reranking and self.reranker:
-            print(f"   - Reranker: {self.reranker}")
-        print(f"   - Top-K Retrieval: {self.top_k}")
-        print(f"   - Re-rank Top-K: {self.rerank_top_k}")
-        print(f"   - Hybrid Search: {self.use_hybrid_search}")
+        logger.info(
+            "\n".join([
+                "✅ Initialized AgenticRAG with:",
+                f"   - LLM Model: {self.llm_model}",
+                f"   - Query Rewriting: {self.use_query_rewriting}",
+                f"   - Re-ranking: {self.use_reranking}",
+                f"   - Reranker: {self.reranker}",
+                f"   - Top-K Retrieval: {self.top_k}",
+                f"   - Re-rank Top-K: {self.rerank_top_k}",
+                f"   - Hybrid Search: {self.use_hybrid_search}",
+            ])
+        )
     
     @observe
     def rewrite_query(self, query: str, num_variations: int = 2) -> List[str]:
@@ -278,11 +282,11 @@ Respond with ONLY the alternative queries, one per line, without numbering or ad
             
             # Always include the original query
             all_queries = [query] + rewritten
-            print(f"🔄 Generated {len(all_queries)} query variations")
+            logger.info(f"🔄 Generated {len(all_queries)} query variations")
             return all_queries
             
         except Exception as e:
-            print(f"⚠️  Query rewriting failed: {e}. Using original query.")
+            logger.error(f"⚠️  Query rewriting failed: {e}. Using original query.")
             return [query]
     
     @observe
@@ -335,7 +339,7 @@ Respond with ONLY the alternative queries, one per line, without numbering or ad
         
         # Sort by score
         results = sorted(all_results.values(), key=lambda x: x.score, reverse=True)
-        print(f"📚 Retrieved {len(results)} unique chunks")
+        logger.info(f"📚 Retrieved {len(results)} unique chunks")
         return results
     
     @observe
@@ -382,11 +386,11 @@ Respond with ONLY the alternative queries, one per line, without numbering or ad
                 original_result.reranked_score = rr.score
                 reranked.append(original_result)
             
-            print(f"🎯 Re-ranked to top {len(reranked)} most relevant chunks")
+            logger.info(f"🎯 Re-ranked to top {len(reranked)} most relevant chunks")
             return reranked
             
         except Exception as e:
-            print(f"⚠️  Re-ranking failed: {e}. Using original order.")
+            logger.error(f"⚠️  Re-ranking failed: {e}. Using original order.")
             return results[:top_k]
     @observe
     def generate_answer(
@@ -444,7 +448,7 @@ Answer:"""
         query: str,
         top_k: Optional[int] = None,
         rerank_top_k: Optional[int] = None,
-        return_sources: bool = True
+            return_sources: bool = True
     ) -> RAGResponse:
         """
         Main query method that orchestrates the entire RAG pipeline.
@@ -458,7 +462,7 @@ Answer:"""
         Returns:
             RAGResponse object with answer and metadata
         """
-        print(f"\n🤖 Processing query: '{query}'")
+        logger.debug(f"\n🤖 Processing query: '{query}'")
         
         # Step 1: Query Rewriting
         rewritten_queries = self.rewrite_query(query)
@@ -481,7 +485,7 @@ Answer:"""
         # Build context string
         context_used = "\n\n".join([chunk.text for chunk in final_chunks])
         
-        print(f"✅ Generated answer using {len(final_chunks)} chunks\n")
+        logger.debug(f"✅ Generated answer using {len(final_chunks)} chunks\n")
         
         return RAGResponse(
             answer=answer,
@@ -513,18 +517,18 @@ Answer:"""
         Returns:
             Number of chunks indexed
         """
-        print(f"\n📄 Indexing document: {document_path}")
+        logger.debug(f"\n📄 Indexing document: {document_path}")
         
         # Load document
         document_text = self.loader.load(document_path)
         
         # Chunk document
         chunks = self.chunker.chunk(document_text)
-        print(f"   Split into {len(chunks)} chunks")
+        logger.debug(f"   Split into {len(chunks)} chunks")
         
         # Generate embeddings
         embeddings = self.embedding_model.embed_chunks(chunks)
-        print(f"   Generated {len(embeddings)} embeddings")
+        logger.debug(f"   Generated {len(embeddings)} embeddings")
         
         # Prepare metadata
         chunk_metadata = []
@@ -544,7 +548,7 @@ Answer:"""
             metadata=chunk_metadata
         )
         
-        print(f"✅ Successfully indexed {len(chunks)} chunks from {document_path}\n")
+        logger.info(f"✅ Successfully indexed {len(chunks)} chunks from {document_path}\n")
         return len(chunks)
     
     def index_documents(
@@ -566,7 +570,7 @@ Answer:"""
         for path in document_paths:
             total_chunks += self.index_document(path, metadata)
         
-        print(f"🎉 Indexed {total_chunks} total chunks from {len(document_paths)} documents")
+        logger.info(f"🎉 Indexed {total_chunks} total chunks from {len(document_paths)} documents")
         return total_chunks
     
     def get_stats(self) -> Dict[str, Any]:
@@ -635,22 +639,22 @@ if __name__ == "__main__":
     ]
     for query in queries:
         response = rag.query(query)
-        print("=" * 80)
-        print(f"Query: {response.original_query}")
-        print("=" * 80)
-        print(f"\nAnswer:\n{response.answer}")
-        print("\n" + "=" * 80)
-        print(f"Metadata:")
+        logger.info("=" * 80)
+        logger.info(f"Query: {response.original_query}")
+        logger.info("=" * 80)
+        logger.info(f"\nAnswer:\n{response.answer}")
+        logger.info("\n" + "=" * 80)
+        logger.info(f"Metadata:")
         for key, value in response.metadata.items():
-            print(f"  {key}: {value}")
-        print("=" * 80)
+            logger.info(f"  {key}: {value}")
+        logger.info("=" * 80)
         
         # Show sources
-        print(f"\nSources used ({len(response.retrieved_chunks)}):")
+        logger.debug(f"\nSources used ({len(response.retrieved_chunks)}):")
         for i, chunk in enumerate(response.retrieved_chunks, 1):
-            print(f"\n{i}. [Score: {chunk.reranked_score or chunk.score:.4f}]")
-            print(f"   {chunk.text[:200]}...")
-            print(f"   Metadata: {chunk.metadata}")
-        print("=" * 80)
+            logger.debug(f"\n{i}. [Score: {chunk.reranked_score or chunk.score:.4f}]")
+            logger.debug(f"   {chunk.text[:200]}...")
+            logger.debug(f"   Metadata: {chunk.metadata}")
+        logger.debug("=" * 80)
     
 

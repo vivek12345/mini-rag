@@ -8,6 +8,7 @@ from typing import List, Dict, Any, Optional
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from dotenv import load_dotenv
+from mini.logger import logger
 
 # Load environment variables
 load_dotenv()
@@ -101,7 +102,7 @@ class CohereReranker(BaseReranker):
         self.model = model
         self.max_chunks_per_doc = max_chunks_per_doc
         self.client = cohere.Client(api_key=self.api_key)
-        print(f"✅ Initialized CohereReranker with model: {model}")
+        logger.debug(f"✅ Initialized CohereReranker with model: {model}")
     
     def rerank(
         self,
@@ -141,7 +142,7 @@ class CohereReranker(BaseReranker):
             return results
             
         except Exception as e:
-            print(f"⚠️  Cohere reranking failed: {e}")
+            logger.error(f"⚠️  Cohere reranking failed: {e}")
             # Fallback: return original order
             return [
                 RerankResult(text=doc, score=1.0 - i/len(documents), index=i)
@@ -196,9 +197,9 @@ class SentenceTransformerReranker(BaseReranker):
         self.model_name = model_name
         self.device = device
         
-        print(f"🔄 Loading cross-encoder model: {model_name}...")
+        logger.debug(f"🔄 Loading cross-encoder model: {model_name}...")
         self.model = CrossEncoder(model_name, device=device)
-        print(f"✅ Initialized SentenceTransformerReranker")
+        logger.debug(f"✅ Initialized SentenceTransformerReranker")
     
     def rerank(
         self,
@@ -233,7 +234,7 @@ class SentenceTransformerReranker(BaseReranker):
             return results
             
         except Exception as e:
-            print(f"⚠️  Cross-encoder reranking failed: {e}")
+            logger.error(f"⚠️  Cross-encoder reranking failed: {e}")
             # Fallback: return original order
             return [
                 RerankResult(text=doc, score=1.0 - i/len(documents), index=i)
@@ -286,7 +287,7 @@ class LLMReranker(BaseReranker):
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.truncate_length = truncate_length
-        print(f"✅ Initialized LLMReranker with model: {model}")
+        logger.debug(f"✅ Initialized LLMReranker with model: {model}")
     
     def rerank(
         self,
@@ -339,7 +340,7 @@ Score:"""
                 ))
                 
             except Exception as e:
-                print(f"⚠️  LLM scoring failed for document {i}: {e}")
+                logger.error(f"⚠️  LLM scoring failed for document {i}: {e}")
                 # Use fallback score
                 results.append(RerankResult(
                     text=doc,
@@ -446,44 +447,44 @@ if __name__ == "__main__":
         "Neural networks are inspired by biological neurons in the human brain."
     ]
     
-    print("=" * 80)
-    print("Testing Different Rerankers")
-    print("=" * 80)
-    print(f"\nQuery: {query}\n")
+    logger.debug("=" * 80)
+    logger.debug("Testing Different Rerankers")
+    logger.debug("=" * 80)
+    logger.debug(f"\nQuery: {query}\n")
     
     # Test Cohere reranker (if API key available)
     if os.getenv("COHERE_API_KEY"):
-        print("\n--- Cohere Reranker ---")
+        logger.debug("\n--- Cohere Reranker ---")
         try:
             cohere_reranker = create_reranker("cohere")
             results = cohere_reranker.rerank(query, documents, top_k=3)
             for i, result in enumerate(results, 1):
-                print(f"{i}. [Score: {result.score:.4f}] {result.text[:80]}...")
+                logger.debug(f"{i}. [Score: {result.score:.4f}] {result.text[:80]}...")
         except Exception as e:
-            print(f"Cohere reranker failed: {e}")
+            logger.debug(f"Cohere reranker failed: {e}")
     
     # Test Sentence Transformer reranker
-    print("\n--- Sentence Transformer Reranker ---")
+    logger.debug("\n--- Sentence Transformer Reranker ---")
     try:
         st_reranker = create_reranker("sentence-transformer")
         results = st_reranker.rerank(query, documents, top_k=3)
         for i, result in enumerate(results, 1):
-            print(f"{i}. [Score: {result.score:.4f}] {result.text[:80]}...")
+            logger.debug(f"{i}. [Score: {result.score:.4f}] {result.text[:80]}...")
     except Exception as e:
-        print(f"Sentence transformer reranker failed: {e}")
+        logger.debug(f"Sentence transformer reranker failed: {e}")
     
     # Test LLM reranker (if OpenAI key available)
     if os.getenv("OPENAI_API_KEY"):
-        print("\n--- LLM Reranker ---")
+        logger.debug("\n--- LLM Reranker ---")
         try:
             from openai import OpenAI
             client = OpenAI()
             llm_reranker = create_reranker("llm", client=client, model="gpt-4o-mini")
             results = llm_reranker.rerank(query, documents, top_k=3)
             for i, result in enumerate(results, 1):
-                print(f"{i}. [Score: {result.score:.4f}] {result.text[:80]}...")
+                logger.debug(f"{i}. [Score: {result.score:.4f}] {result.text[:80]}...")
         except Exception as e:
-            print(f"LLM reranker failed: {e}")
+            logger.debug(f"LLM reranker failed: {e}")
     
-    print("\n" + "=" * 80)
+    logger.debug("\n" + "=" * 80)
 
