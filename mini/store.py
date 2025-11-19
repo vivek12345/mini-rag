@@ -6,12 +6,17 @@ import os
 from typing import List, Optional, Dict, Any
 from pymilvus import (
     MilvusClient,
+    AsyncMilvusClient,
     connections,
     Collection,
     CollectionSchema,
     FieldSchema,
     DataType,
     utility,
+    AnnSearchRequest,
+    RRFRanker,
+    Function,
+    FunctionType
 )
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
@@ -121,6 +126,7 @@ class VectorStore:
         self.__connect()
         self.collection: Optional[Collection] = None
         self._create_or_load_collection()
+
     def __connect(self):
         """Connect to Milvus."""
         connections.connect(uri=self.config.uri, token=self.config.token)
@@ -141,6 +147,7 @@ class VectorStore:
     def _create_collection(self):
         """Create a new collection with the specified schema."""
         # Define schema
+        analyzer_params = {"tokenizer": "standard", "filter": ["lowercase"]}
         fields = [
             FieldSchema(
                 name="id",
@@ -156,10 +163,18 @@ class VectorStore:
                 description="Embedding vector"
             ),
             FieldSchema(
+                name="sparse_vector",
+                dtype=DataType.SPARSE_FLOAT_VECTOR,
+                description="Sparse embedding vector"
+            ),
+            FieldSchema(
                 name="text",
                 dtype=DataType.VARCHAR,
                 max_length=65535,
-                description="Original text"
+                description="Original text",
+                analyzer_params=analyzer_params,
+                enable_match=True,  # Enable text matching
+                enable_analyzer=True,  # Enable text analysis
             ),
             FieldSchema(
                 name="metadata",
@@ -172,6 +187,17 @@ class VectorStore:
             fields=fields,
             description=f"Collection for {self.config.collection_name}"
         )
+
+        # Define BM25 function to generate sparse vectors from text
+        bm25_function = Function(
+            name="bm25",
+            function_type=FunctionType.BM25,
+            input_field_names=["text"],
+            output_field_names="sparse_vector",
+        )
+
+        # Add the function to schema
+        schema.add_function(bm25_function)
         
         # Create collection
         self.collection = Collection(
@@ -189,6 +215,14 @@ class VectorStore:
         self.collection.create_index(
             field_name="embedding",
             index_params=index_params
+        )
+
+        self.collection.create_index(
+            field_name="sparse_vector",
+            index_params={
+                "index_type": "SPARSE_INVERTED_INDEX",
+                "metric_type": "BM25"
+            }
         )
         
         # Load collection to memory
@@ -287,6 +321,71 @@ class VectorStore:
                 formatted_results.append(result)
         
         return formatted_results
+
+    def hybrid_search(
+        self, 
+        query: str, 
+        query_embedding: List[float], 
+        top_k: int = 5, 
+        filter_expr: Optional[str] = None, 
+        output_fields: Optional[List[str]] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Hybrid search for similar vectors.
+        
+        Args:
+            query_embedding: Query vector
+            top_k: Number of results to return
+        """
+        if output_fields is None:
+            output_fields = ["text", "metadata"]
+        
+        search_params = {
+            "metric_type": self.config.metric_type,
+            "params": {"nprobe": 10}
+        }
+        
+        req_dense = AnnSearchRequest(
+            data=[query_embedding],
+            anns_field="embedding",
+            param=search_params,
+            limit=top_k,
+        )
+
+        sparse_search_params = {"metric_type": "BM25"}
+        req_sparse = AnnSearchRequest(
+            data=[query],
+            anns_field="sparse_vector",
+            param=sparse_search_params,
+            limit=top_k,
+        )
+
+        reqs = [req_dense, req_sparse]
+
+        ranker = RRFRanker()
+
+        results = self.collection.hybrid_search(
+            reqs=reqs,
+            rerank=ranker,
+            output_fields=output_fields,
+            limit=top_k
+        )
+
+        # Format results
+        formatted_results = []
+        for hits in results:
+            for hit in hits:
+                result = {
+                    "id": hit.id,
+                    "score": hit.score,
+                    "distance": hit.distance,
+                }
+                # Add output fields
+                for field in output_fields:
+                    result[field] = hit.entity.get(field)
+                formatted_results.append(result)
+        
+        return formatted_results
     
     def delete(self, expr: str) -> int:
         """
@@ -338,7 +437,7 @@ if __name__ == "__main__":
     
     # Load and process documents
     loader = DocumentLoader()
-    document = loader.load("./mini/documents/budget_speech.pdf")
+    document = loader.load("./mini/documents/eb_test.pdf")
     
     # Chunk the document
     chunker = Chunker()
@@ -378,12 +477,22 @@ if __name__ == "__main__":
         top_k=3
     )
     
-    print("\nSearch results:")
+    print("\nSearch results normal search:")
     for i, result in enumerate(results, 1):
         print(f"\n{i}. Score: {result['score']:.4f}")
         print(f"   Text: {result['text'][:100]}...")
         print(f"   Metadata: {result['metadata']}")
     
+    results = store.hybrid_search(
+        query="tell me about package 1",
+        query_embedding=embedding_model.embed_query("tell me about package 1"),
+        top_k=3
+    )
+    print("\nSearch results hybrid search:")
+    for i, result in enumerate(results, 1):
+        print(f"\n{i}. Score: {result['score']:.4f}")
+        print(f"   Text: {result['text'][:100]}...")
+        print(f"   Metadata: {result['metadata']}")
     # Clean up
     # store.drop_collection()  # Uncomment to drop collection
     store.disconnect()

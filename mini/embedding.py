@@ -6,7 +6,7 @@ Supports OpenAI, Azure OpenAI, and any other OpenAI-compatible endpoints.
 import os
 from typing import List, Optional, Union
 
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel, ConfigDict, Field
 from dotenv import load_dotenv
 
@@ -127,6 +127,7 @@ class EmbeddingModel:
             client_kwargs["base_url"] = self.config.base_url
         
         self.client = OpenAI(**client_kwargs)
+        self.async_client = AsyncOpenAI(**client_kwargs)
     
     def embed_chunks(self, chunks: List[str]) -> List[List[float]]:
         """
@@ -167,6 +168,47 @@ class EmbeddingModel:
         except Exception as e:
             raise ValueError(f"Error generating embedding: {e}")
 
+    async def aembed_chunks(self, chunks: List[str]) -> List[List[float]]:
+        """
+        Generate embeddings for a list of chunks (asynchronous).
+        
+        Args:
+            chunks: List of input chunks to embed
+            
+        Returns:
+            List of embeddings (one per chunk)
+        """
+        if not chunks:
+            raise ValueError("Input texts list cannot be empty")
+        chunks = [chunk.text for chunk in chunks]
+        # Extract text if chunks are objects with .text attribute
+        texts = [chunk.text if hasattr(chunk, 'text') else chunk for chunk in chunks]
+        
+        try:
+            response = await self.async_client.embeddings.create(
+                input=texts,
+                model=self.config.model
+            )
+            return [item.embedding for item in response.data]
+        except Exception as e:
+            raise ValueError(f"Error generating embeddings: {e}")
+
+    async def aembed_query(self, query: str) -> List[float]:
+        """
+        Generate an embedding for a query (asynchronous).
+        
+        Args:
+            query: Query string to embed
+        """
+        try:
+            response = await self.async_client.embeddings.create(
+                input=query,
+                model=self.config.model
+            )
+            return response.data[0].embedding
+        except Exception as e:
+            raise ValueError(f"Error generating embedding: {e}")
+
     def __repr__(self) -> str:
         """String representation of the embedding model."""
         base_url = self.config.base_url or "default"
@@ -178,12 +220,30 @@ class EmbeddingModel:
 
 
 if __name__ == "__main__":
-    from loader import DocumentLoader
-    from chunker import Chunker
-    loader = DocumentLoader()
-    document = loader.load("./mini/documents/budget_speech.pdf")
-    chunker = Chunker()
-    chunks = chunker.chunk(document)
-    embedding_model = EmbeddingModel()
-    embeddings = embedding_model.embed_chunks(chunks)
-    print(len(embeddings))
+    def sync_example():
+        print("Sync example")
+        from loader import DocumentLoader
+        from chunker import Chunker
+        loader = DocumentLoader()
+        document = loader.load("./mini/documents/eb_test.pdf")
+        chunker = Chunker()
+        chunks = chunker.chunk(document)
+        embedding_model = EmbeddingModel()
+        embeddings = embedding_model.embed_chunks(chunks)
+        print(len(embeddings))
+
+    async def async_example():
+        print("Async example")
+        from loader import DocumentLoader
+        from chunker import Chunker
+        loader = DocumentLoader()
+        document = loader.load("./mini/documents/eb_test.pdf")
+        chunker = Chunker()
+        chunks = chunker.chunk(document)
+        embedding_model = EmbeddingModel()
+        embeddings = await embedding_model.aembed_chunks(chunks)
+        print(len(embeddings))
+
+    import asyncio
+    asyncio.run(async_example())
+    sync_example()

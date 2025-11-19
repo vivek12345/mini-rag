@@ -39,6 +39,7 @@ class RetrievalConfig:
     rerank_top_k: int = 3
     use_query_rewriting: bool = True
     use_reranking: bool = True
+    use_hybrid_search: bool = False
 
 
 @dataclass
@@ -176,6 +177,7 @@ class AgenticRAG:
         self.temperature = self.llm_config.temperature
         self.top_k = self.retrieval_config.top_k
         self.rerank_top_k = self.retrieval_config.rerank_top_k
+        self.use_hybrid_search = self.retrieval_config.use_hybrid_search
         
         # Initialize LLM client
         llm_kwargs = {
@@ -231,6 +233,7 @@ class AgenticRAG:
             print(f"   - Reranker: {self.reranker}")
         print(f"   - Top-K Retrieval: {self.top_k}")
         print(f"   - Re-rank Top-K: {self.rerank_top_k}")
+        print(f"   - Hybrid Search: {self.use_hybrid_search}")
     
     @observe
     def rewrite_query(self, query: str, num_variations: int = 2) -> List[str]:
@@ -307,11 +310,17 @@ Respond with ONLY the alternative queries, one per line, without numbering or ad
             # Generate query embedding
             query_embedding = self.embedding_model.embed_query(query)
             
-            # Search vector store
-            search_results = self.vector_store.search(
-                query_embedding=query_embedding,
-                top_k=top_k
-            )
+            if self.use_hybrid_search:
+                search_results = self.vector_store.hybrid_search(
+                    query=query,
+                    query_embedding=query_embedding,
+                    top_k=top_k
+                )
+            else:
+                search_results = self.vector_store.search(
+                    query_embedding=query_embedding,
+                    top_k=top_k
+                )
             
             # Convert to RetrievalResult
             for rank, result in enumerate(search_results, 1):
@@ -604,7 +613,8 @@ if __name__ == "__main__":
             top_k=10,
             rerank_top_k=3,
             use_query_rewriting=True,
-            use_reranking=True
+            use_reranking=True,
+            use_hybrid_search=True
         ),
         reranker_config=RerankerConfig(
             type="cohere",
@@ -620,8 +630,8 @@ if __name__ == "__main__":
     
     # Query the system
     queries = [
-        "What is the budget allocated for railways?",
-        "What the theme of G20?"
+        "tell me about package 1",
+        "what is outpatient for female in package 2"
     ]
     for query in queries:
         response = rag.query(query)
